@@ -1,0 +1,87 @@
+experiment_examples_demo:
+  ros__parameters:
+    # 统一实验入口：
+    # - `nullspace_ik`
+    # - `potential_field_avoidance`
+    # - `moveit_avoidance`
+    experiment_mode: "potential_field_avoidance"
+
+    # 对 null-space 对照实验，默认优先使用源码里构造的“已知可达目标”。
+    # 这样更适合做稳定复现实验，避免随手填写 pose 直接导致 IK 不收敛。
+    use_safe_demo_target: true
+
+    # 连续随机目标模式目前主要给势场法 demo 使用：
+    # 节点会周期性随机生成一个可达目标位姿，并尝试规划避障轨迹。
+    continuous_random_goal_loop: true
+    random_goal_period_sec: 5.0
+    random_goal_attempts_per_cycle: 2
+    random_goal_joint_limit_margin_ratio: 0.15
+    random_goal_local_joint_delta_ratio: 0.20
+    random_goal_precheck_with_ik: true
+    reuse_last_success_as_start: true
+
+    # 当 `use_safe_demo_target` 为 false 时，才直接使用下面这组目标位姿。
+    target_position: [0.30, 0.00, 0.55]
+    target_orientation: [0.0, 0.0, 0.0, 1.0]
+
+    # 起始关节姿态，顺序需与 URDF / `robot_model_->jointNames()` 一致。
+    start_configuration: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # 参与势场避障的链路 frame 列表。
+    collision_frames:
+      - iiwa_link_1
+      - iiwa_link_2
+      - iiwa_link_3
+      - iiwa_link_4
+      - iiwa_link_5
+      - iiwa_link_6
+      - iiwa_link_7
+      - iiwa_link_ee
+
+    # 工作空间球形障碍物参数：
+    # `obstacle_centers` 每 3 个数对应一个球心 xyz。
+    obstacle_centers: [10.0, 10.0, 10.0]
+    obstacle_radii: [0.01]
+    obstacle_safety_margins: [0.01]
+
+    # 公共轨迹离散化参数。
+    segment_duration: 0.15
+    sample_period: 0.05
+    publish_rate_hz: 20.0
+    cartesian_waypoint_count: 6
+
+    # null-space / 数值 IK 参数。
+    ik_solver_method: "dls"
+    ik_max_iterations: 500
+    ik_position_tolerance: 1.0e-4
+    ik_orientation_tolerance: 1.0e-3
+    ik_damping: 1.0e-4
+    ik_step_size: 0.12
+    ik_lm_initial_damping: 1.0e-2
+    ik_lm_decrease_factor: 0.5
+    ik_lm_increase_factor: 2.0
+    enable_joint_limit_nullspace: true
+    joint_limit_nullspace_gain: 0.25
+
+    # 势场法避障参数。
+    max_steps: 500
+    attractive_position_gain: 1.2
+    attractive_orientation_gain: 0.8
+    repulsive_gain: 0.008
+    influence_distance: 0.14
+    joint_centering_gain: 0.02
+    jacobian_damping: 1.0e-4
+    goal_position_tolerance: 0.01
+    goal_orientation_tolerance: 0.12
+    max_joint_step_norm: 0.08
+    hold_orientation: false
+
+    # MoveIt 避障规划参数。
+    planning_group: "manipulator"
+    planning_frame: "world"
+    planning_pipeline: "ompl"
+    planner_id: "RRTConnectkConfigDefault"
+    planning_time: 5.0
+    planning_attempts: 5
+    max_velocity_scaling_factor: 0.2
+    max_acceleration_scaling_factor: 0.2

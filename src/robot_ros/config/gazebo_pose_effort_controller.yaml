@@ -1,0 +1,29 @@
+pose_effort_controller:
+  ros__parameters:
+    target_pose_topic: /target_pose
+    joint_state_topic: /joint_states
+    reference_topic: /desired_joint_states
+
+    # 每次末端位姿请求对应的一段关节目标轨迹时长。
+    segment_duration: 3.0
+
+    # 轨迹插值采样周期，也是向下层 effort 控制器发送关节目标点的周期。
+    sample_period: 0.02
+
+    # 默认只控制末端位置，让姿态保持当前值，便于先把闭环跑稳。
+    position_only: false
+
+    # 若上层以固定频率反复发送同一个目标位姿，
+    # 这里用位置/姿态阈值判断“是否还是同一个目标”，
+    # 避免对同一目标重复做 IK 和轨迹重建，把日志刷得过于杂乱。
+    repeated_target_position_tolerance: 1.0e-6
+    repeated_target_orientation_tolerance: 1.0e-6
+
+    ik_solver_method: lm
+    ik_max_iterations: 200
+    ik_position_tolerance: 0.005
+    ik_orientation_tolerance: 0.2
+    ik_damping: 0.001
+    ik_step_size: 0.15
+    enable_joint_limit_nullspace: true
+    joint_limit_nullspace_gain: 0.03

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>robot_ros</name>
+  <version>0.0.0</version>
+  <description>ROS2 bridge package for visualizing robot_core outputs in RViz.</description>
+  <maintainer email="2028854016@qq.com">zhangjianglong</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- 构建工具：标准 ament_cmake ROS2 包。 -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- 编译期依赖：节点本体、消息和核心算法接口。 -->
+  <depend>ament_index_cpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>robot_core</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>trajectory_msgs</depend>
+
+  <!-- 运行期依赖：launch、URDF 描述、TF 发布和 RViz 可视化。 -->
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>robot_description</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <!-- 测试期依赖：以 lint 为主。 -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

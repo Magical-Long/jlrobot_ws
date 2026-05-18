@@ -1,0 +1,88 @@
+joint_effort_controller:
+  ros__parameters:
+    # 订阅 Gazebo / ros2_control 返回的当前关节状态。
+    joint_state_topic: /joint_states
+
+    # 订阅外部给出的目标关节参考。
+    reference_topic: /desired_joint_states
+
+    # 发布给 effort controller 的关节力矩命令。
+    command_topic: /arm_effort_controller/commands
+
+    # 闭环 PD 控制运行频率。Gazebo 中常用 100~500 Hz 起步调试。
+    control_rate_hz: 250.0
+
+    # 若启动后还没收到外部参考，就先保持当前关节构型，避免零力矩自然下垂。
+    hold_current_position_on_startup: true
+
+    # 关节空间 PD 增益。
+    kp: [150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0]
+    kd: [15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0]
+
+    # 是否启用完整的 inverse dynamics / computed torque 控制。
+    # 关闭时，控制律为：
+    #   tau = Kp (q_des - q) + Kd (dq_des - dq) + g(q)
+    #
+    # 开启时，控制律升级为两步：
+    # 1. 先构造期望关节角加速度
+    #    ddq_cmd = ddq_des + Kd (dq_des - dq) + Kp (q_des - q)
+    # 2. 再通过 Pinocchio 逆动力学求力矩
+    #    tau = M(q) ddq_cmd + C(q,dq) dq + g(q)
+    #
+    # 当前默认先保持关闭，便于和现有 `PD + g(q)` 控制器做对照实验。
+    enable_inverse_dynamics: true
+
+    # 是否叠加模型重力补偿。
+    # 开启后控制律从“纯 PD”变为 `tau = tau_pd + g(q)`，
+    # 对抗重力下垂和稳态误差通常会明显更有帮助。
+    enable_gravity_compensation: true
+
+    # 是否对关节速度反馈做滤波。
+    # 这层滤波的主要目的，是减少 Gazebo / 数值微分带来的速度抖动，
+    # 从而避免 `Kd * (dq_des - dq)` 直接把高频噪声放大成关节颤振。
+    enable_velocity_filter: true
+
+    # 是否发布滤波调试话题。
+    # 开启后会额外发布：
+    # - 原始关节速度 `/debug/raw_joint_velocity`
+    # - 滤波后关节速度 `/debug/filtered_joint_velocity`
+    # 便于在 PlotJuggler 中直接叠图比较滤波前后差异。
+    enable_velocity_filter_debug_topics: true
+
+    # 原始关节速度调试话题名。
+    raw_velocity_debug_topic: /debug/raw_joint_velocity
+
+    # 滤波后关节速度调试话题名。
+    filtered_velocity_debug_topic: /debug/filtered_joint_velocity
+
+    # 速度滤波器类型：
+    # - none: 不做滤波
+    # - low_pass: 固定截止频率一阶低通
+    # - one_euro: 自适应截止频率的 One Euro Filter
+    #
+    # 当前默认推荐 `low_pass`，因为它对“零点附近速度噪声很大”的场景更直接，
+    # 调参时也比 One Euro 更容易理解。
+    # One Euro Filter 的实现仍然保留在 `robot_core/filters.*` 中，后续可随时切回做对照实验。
+    velocity_filter_type: one_euro
+
+    # 一阶低通滤波截止频率，单位 Hz。
+    # 当 `velocity_filter_type=low_pass` 时生效。
+    # 截止频率越低，滤波越强，但滞后也越明显。
+    velocity_low_pass_cutoff_hz: 8.0
+
+    # One Euro Filter 的最小截止频率，单位 Hz。
+    # 越小越平滑，但静止附近也会更“钝”。
+    velocity_one_euro_min_cutoff_hz: 2.0
+
+    # One Euro Filter 的速度相关增益。
+    # 越大表示运动变快时越愿意放宽滤波、减少相位滞后。
+    velocity_one_euro_beta: 0.02
+
+    # One Euro Filter 内部导数低通的截止频率，单位 Hz。
+    velocity_one_euro_derivative_cutoff_hz: 8.0
+
+    # 输出力矩限幅。
+    # 这里默认与 `robot_description/urdf/robot.urdf` 中各关节的 `effort` 上限对齐。
+    # 当前 iiwa7 的 7 个转动关节在 URDF 里都是 300，因此这里统一写成 300。
+    enable_torque_limits: true
+    max_torque: [300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0]

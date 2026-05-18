@@ -1,0 +1,40 @@
+controller_manager:
+  ros__parameters:
+    # 控制器管理器主循环频率，单位 Hz。
+    update_rate: 250
+
+    # 广播机器人当前关节状态，供 TF / RViz / 监控工具消费。
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # 主机械臂控制器，这里使用标准的关节轨迹控制器。
+    arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+arm_controller:
+  ros__parameters:
+    # 受控关节顺序必须与 URDF / 控制指令中的关节顺序保持一致。
+    joints:
+      - iiwa_joint_1
+      - iiwa_joint_2
+      - iiwa_joint_3
+      - iiwa_joint_4
+      - iiwa_joint_5
+      - iiwa_joint_6
+      - iiwa_joint_7
+
+    # 当前只接收位置命令，同时回传位置与速度状态。
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+
+    # 这里要求目标必须覆盖全部关节，避免部分关节保持旧值造成歧义。
+    allow_partial_joints_goal: false
+    open_loop_control: true
+
+    # 轨迹执行相关约束。
+    constraints:
+      goal_time: 0.5
+      stopped_velocity_tolerance: 0.01

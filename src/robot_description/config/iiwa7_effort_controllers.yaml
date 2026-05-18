@@ -1,0 +1,24 @@
+controller_manager:
+  ros__parameters:
+    # 控制器管理器主循环频率，单位 Hz。
+    update_rate: 250
+
+    # 广播机器人当前关节状态，供 TF / RViz / 监控工具消费。
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # 力矩控制模式下的主控制器，直接接收每个关节的 effort 命令。
+    arm_effort_controller:
+      type: effort_controllers/JointGroupEffortController
+
+arm_effort_controller:
+  ros__parameters:
+    # 受控关节顺序必须与 URDF / 控制命令中的顺序保持一致。
+    joints:
+      - iiwa_joint_1
+      - iiwa_joint_2
+      - iiwa_joint_3
+      - iiwa_joint_4
+      - iiwa_joint_5
+      - iiwa_joint_6
+      - iiwa_joint_7
