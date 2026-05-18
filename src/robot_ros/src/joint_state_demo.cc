@@ -12,9 +12,15 @@
 #include <Eigen/Geometry>
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#include "robot_utils/logging.hpp"
 
 namespace robot_ros
 {
+  namespace
+  {
+    constexpr const char * kLogTag = "JOINT_DEMO";
+  }
+
   JointStateDemoNode::JointStateDemoNode()
       : rclcpp::Node("joint_state_demo"),
         startup_time_(std::chrono::steady_clock::now())
@@ -43,8 +49,8 @@ namespace robot_ros
             std::chrono::duration<double>(sample_period_)),
         std::bind(&JointStateDemoNode::publishNextState, this));
 
-    RCLCPP_INFO(
-        get_logger(),
+    ROBOT_UTILS_LOG_INFO_TAG(
+        kLogTag,
         "Joint state demo is ready. Publishing %zu samples from URDF: %s",
         trajectory_.size(),
         urdf_path_.c_str());
@@ -242,8 +248,8 @@ namespace robot_ros
       if (!isCartesianWaypointReachable(cartesian_waypoints[idx], &solution, seed))
       {
         const auto &pose = cartesian_waypoints[idx];
-        RCLCPP_ERROR(
-            get_logger(),
+        ROBOT_UTILS_LOG_ERROR_TAG(
+            kLogTag,
             "Cartesian waypoint %zu is not reachable: position=(%.3f, %.3f, %.3f), "
             "orientation=(%.3f, %.3f, %.3f, %.3f)",
             idx,
@@ -321,7 +327,7 @@ namespace robot_ros
       {
         // 不循环时停在最后一个姿态；robot_state_publisher 会继续保持最后一次 TF。
         publish_timer_->cancel();
-        RCLCPP_INFO(get_logger(), "Trajectory playback completed.");
+        ROBOT_UTILS_LOG_INFO_TAG(kLogTag, "Trajectory playback completed.");
         return;
       }
 

@@ -15,6 +15,7 @@
   <depend>geometry_msgs</depend>
   <depend>rclcpp</depend>
   <depend>robot_core</depend>
+  <depend>robot_utils</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>trajectory_msgs</depend>

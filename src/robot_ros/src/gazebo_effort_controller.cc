@@ -11,9 +11,15 @@
 #include <stdexcept>
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#include "robot_utils/logging.hpp"
 
 namespace robot_ros
 {
+namespace
+{
+constexpr const char * kLogTag = "EFFORT";
+}
+
 GazeboEffortControllerNode::GazeboEffortControllerNode()
 : rclcpp::Node("joint_effort_controller")
 {
@@ -42,8 +48,8 @@ GazeboEffortControllerNode::GazeboEffortControllerNode()
       std::chrono::duration<double>(1.0 / std::max(1.0, control_rate_hz_))),
     std::bind(&GazeboEffortControllerNode::runControlLoop, this));
 
-  RCLCPP_INFO(
-    get_logger(),
+  ROBOT_UTILS_LOG_INFO_TAG(
+    kLogTag,
     "Gazebo effort controller is ready. joint_state_topic=%s, reference_topic=%s, command_topic=%s",
     joint_state_topic_.c_str(),
     reference_topic_.c_str(),
@@ -176,8 +182,8 @@ void GazeboEffortControllerNode::initializeController()
   }
   // ------------------------------- DEBUG END -------------------------------
 
-  RCLCPP_INFO(
-    get_logger(),
+  ROBOT_UTILS_LOG_INFO_TAG(
+    kLogTag,
     "Joint torque controller configuration: inverse_dynamics=%s, gravity_compensation=%s, torque_limits=%s, "
     "velocity_filter=%s, velocity_filter_type=%s, velocity_filter_debug=%s",
     enable_inverse_dynamics ? "true" : "false",
@@ -223,8 +229,8 @@ void GazeboEffortControllerNode::handleJointState(
     reference_.accelerations = Eigen::VectorXd::Zero(current_state_.velocities.size());
     has_reference_ = true;
 
-    RCLCPP_INFO(
-      get_logger(),
+    ROBOT_UTILS_LOG_INFO_TAG(
+      kLogTag,
       "No external reference received yet. Holding the current joint configuration as the startup target.");
   }
 }
@@ -239,12 +245,15 @@ void GazeboEffortControllerNode::handleReferenceJointState(
 
   if (!updateReferenceFromJointState(*msg))
   {
-    RCLCPP_WARN(get_logger(), "Ignoring invalid desired_joint_states message.");
+    ROBOT_UTILS_LOG_WARN_TAG(kLogTag, "Ignoring invalid desired_joint_states message.");
     return;
   }
 
   has_reference_ = true;
-  RCLCPP_INFO(get_logger(), "Updated PD torque control reference from %s.", reference_topic_.c_str());
+  ROBOT_UTILS_LOG_INFO_TAG(
+    kLogTag,
+    "Updated PD torque control reference from %s.",
+    reference_topic_.c_str());
 }
 
 void GazeboEffortControllerNode::runControlLoop()
@@ -257,9 +266,8 @@ void GazeboEffortControllerNode::runControlLoop()
   Eigen::VectorXd torque_command;
   if (!pd_controller_->computeTorque(current_state_, reference_, torque_command))
   {
-    RCLCPP_WARN_THROTTLE(
-      get_logger(),
-      *get_clock(),
+    ROBOT_UTILS_LOG_WARN_THROTTLE_MS_TAG(
+      kLogTag,
       2000,
       "Skipping one effort control cycle because controller input is invalid.");
     return;

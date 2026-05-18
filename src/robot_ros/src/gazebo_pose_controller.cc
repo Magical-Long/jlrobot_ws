@@ -11,9 +11,15 @@
 #include <stdexcept>
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#include "robot_utils/logging.hpp"
 
 namespace robot_ros
 {
+  namespace
+  {
+    constexpr const char * kLogTag = "POSE_TRAJ";
+  }
+
   GazeboPoseControllerNode::GazeboPoseControllerNode()
       : rclcpp::Node("gazebo_pose_controller")
   {
@@ -38,8 +44,8 @@ namespace robot_ros
         command_topic_,
         rclcpp::QoS(10));
 
-    RCLCPP_INFO(
-        get_logger(),
+    ROBOT_UTILS_LOG_INFO_TAG(
+        kLogTag,
         "Gazebo pose controller is ready. target_pose_topic=%s, joint_state_topic=%s, command_topic=%s",
         target_pose_topic_.c_str(),
         joint_state_topic_.c_str(),
@@ -143,8 +149,8 @@ namespace robot_ros
 
     if (!has_current_configuration_)
     {
-      RCLCPP_WARN(
-          get_logger(),
+      ROBOT_UTILS_LOG_WARN_TAG(
+          kLogTag,
           "No valid joint state has been received yet. Falling back to neutral configuration as IK seed.");
     }
 
@@ -154,8 +160,8 @@ namespace robot_ros
       geometry_msgs::msg::Pose current_pose;
       if (robot_model_->forwardKinematics(start_configuration, current_pose))
       {
-        RCLCPP_ERROR(
-            get_logger(),
+        ROBOT_UTILS_LOG_ERROR_TAG(
+            kLogTag,
             "Failed to solve IK for target pose [%.4f, %.4f, %.4f]. position_only=%s. "
             "Current ee pose is [%.4f, %.4f, %.4f].",
             msg->position.x,
@@ -168,8 +174,8 @@ namespace robot_ros
       }
       else
       {
-        RCLCPP_ERROR(
-            get_logger(),
+        ROBOT_UTILS_LOG_ERROR_TAG(
+            kLogTag,
             "Failed to solve IK for target pose [%.4f, %.4f, %.4f]. position_only=%s",
             msg->position.x,
             msg->position.y,
@@ -187,16 +193,16 @@ namespace robot_ros
     }
     catch (const std::exception &exception)
     {
-      RCLCPP_ERROR(
-          get_logger(),
+      ROBOT_UTILS_LOG_ERROR_TAG(
+          kLogTag,
           "Failed to build command trajectory: %s",
           exception.what());
       return;
     }
     trajectory_publisher_->publish(command);
 
-    RCLCPP_INFO(
-        get_logger(),
+    ROBOT_UTILS_LOG_INFO_TAG(
+        kLogTag,
         "Published %zu trajectory points to %s for target pose [%.4f, %.4f, %.4f].",
         command.points.size(),
         command_topic_.c_str(),
@@ -279,8 +285,8 @@ namespace robot_ros
 
     for (std::size_t idx = 0; idx < seeds.size(); ++idx)
     {
-      RCLCPP_INFO(
-          get_logger(),
+      ROBOT_UTILS_LOG_INFO_TAG(
+          kLogTag,
           "Trying IK seed #%zu/%zu for target [%.4f, %.4f, %.4f]. position_only=%s",
           idx + 1,
           seeds.size(),
@@ -304,16 +310,16 @@ namespace robot_ros
       if (solved)
       {
         target_configuration = candidate;
-        RCLCPP_INFO(
-            get_logger(),
+        ROBOT_UTILS_LOG_INFO_TAG(
+            kLogTag,
             "IK solved with seed #%zu in %.2f ms.",
             idx + 1,
             elapsed_ms);
         return true;
       }
 
-      RCLCPP_WARN(
-          get_logger(),
+      ROBOT_UTILS_LOG_WARN_TAG(
+          kLogTag,
           "IK seed #%zu failed after %.2f ms.",
           idx + 1,
           elapsed_ms);

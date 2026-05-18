@@ -20,6 +20,7 @@ find_package(ament_index_cpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(robot_core REQUIRED)
+find_package(robot_utils REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
@@ -42,6 +43,7 @@ ament_target_dependencies(joint_state_demo
   ament_index_cpp
   rclcpp
   robot_core
+  robot_utils
   sensor_msgs
 )
 
@@ -64,6 +66,7 @@ ament_target_dependencies(gazebo_pose_controller
   geometry_msgs
   rclcpp
   robot_core
+  robot_utils
   sensor_msgs
   trajectory_msgs
 )
@@ -87,6 +90,7 @@ ament_target_dependencies(gazebo_effort_controller
   ament_index_cpp
   rclcpp
   robot_core
+  robot_utils
   sensor_msgs
   std_msgs
 )
@@ -110,6 +114,7 @@ ament_target_dependencies(gazebo_pose_effort_controller
   geometry_msgs
   rclcpp
   robot_core
+  robot_utils
   sensor_msgs
 )
 

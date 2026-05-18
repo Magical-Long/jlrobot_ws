@@ -12,9 +12,15 @@
 #include <stdexcept>
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#include "robot_utils/logging.hpp"
 
 namespace robot_ros
 {
+namespace
+{
+constexpr const char * kLogTag = "POSE_EFFORT";
+}
+
 GazeboPoseEffortControllerNode::GazeboPoseEffortControllerNode()
 : rclcpp::Node("pose_effort_controller")
 {
@@ -62,8 +68,8 @@ GazeboPoseEffortControllerNode::GazeboPoseEffortControllerNode()
       std::chrono::duration<double>(sample_period_)),
     std::bind(&GazeboPoseEffortControllerNode::publishNextReferencePoint, this));
 
-  RCLCPP_INFO(
-    get_logger(),
+  ROBOT_UTILS_LOG_INFO_TAG(
+    kLogTag,
     "Gazebo pose effort controller is ready. target_pose_topic=%s, joint_state_topic=%s, effort_target_topic=%s",
     target_pose_topic_.c_str(),
     joint_state_topic_.c_str(),
@@ -71,8 +77,8 @@ GazeboPoseEffortControllerNode::GazeboPoseEffortControllerNode()
 
   if (enable_debug_ee_pose_publisher_)
   {
-    RCLCPP_INFO(
-      get_logger(),
+    ROBOT_UTILS_LOG_INFO_TAG(
+      kLogTag,
       "Debug ee pose publisher is enabled. debug_ee_pose_topic=%s, end_effector_frame=%s",
       debug_ee_pose_topic_.c_str(),
       end_effector_frame_.c_str());
@@ -181,8 +187,8 @@ void GazeboPoseEffortControllerNode::handleTargetPose(
 
   if (!has_current_configuration_)
   {
-    RCLCPP_WARN(
-      get_logger(),
+    ROBOT_UTILS_LOG_WARN_TAG(
+      kLogTag,
       "No valid joint state has been received yet. Falling back to neutral configuration as IK seed.");
   }
   // Gazebo effort 模式下关节可能因重力或数值积分略微越过 URDF 限位。
@@ -193,8 +199,8 @@ void GazeboPoseEffortControllerNode::handleTargetPose(
   // 避免同一目标反复触发 IK 和轨迹重建，把终端日志刷得很乱。
   if (has_last_target_pose_ && isSameTargetPose(*msg))
   {
-    RCLCPP_DEBUG(
-      get_logger(),
+    ROBOT_UTILS_LOG_DEBUG_TAG(
+      kLogTag,
       "Ignoring repeated target pose [%.4f, %.4f, %.4f].",
       msg->position.x,
       msg->position.y,
@@ -215,8 +221,8 @@ void GazeboPoseEffortControllerNode::handleTargetPose(
     geometry_msgs::msg::Pose current_pose;
     if (robot_model_->forwardKinematics(start_configuration, current_pose))
     {
-      RCLCPP_ERROR(
-        get_logger(),
+      ROBOT_UTILS_LOG_ERROR_TAG(
+        kLogTag,
         "Failed to solve IK for target pose [%.4f, %.4f, %.4f]. position_only=%s. "
         "Current ee pose is [%.4f, %.4f, %.4f].",
         msg->position.x,
@@ -229,8 +235,8 @@ void GazeboPoseEffortControllerNode::handleTargetPose(
     }
     else
     {
-      RCLCPP_ERROR(
-        get_logger(),
+      ROBOT_UTILS_LOG_ERROR_TAG(
+        kLogTag,
         "Failed to solve IK for target pose [%.4f, %.4f, %.4f]. position_only=%s",
         msg->position.x,
         msg->position.y,
@@ -243,7 +249,7 @@ void GazeboPoseEffortControllerNode::handleTargetPose(
   target_configuration = robot_model_->clampToLimits(target_configuration);
   if (!buildReferenceTrajectory(start_configuration, target_configuration))
   {
-    RCLCPP_ERROR(get_logger(), "Failed to build reference trajectory from IK solution.");
+    ROBOT_UTILS_LOG_ERROR_TAG(kLogTag, "Failed to build reference trajectory from IK solution.");
     return;
   }
 
@@ -251,8 +257,8 @@ void GazeboPoseEffortControllerNode::handleTargetPose(
   last_target_pose_ = *msg;
   has_last_target_pose_ = true;
 
-  RCLCPP_INFO(
-    get_logger(),
+  ROBOT_UTILS_LOG_INFO_TAG(
+    kLogTag,
     "Accepted target pose [%.4f, %.4f, %.4f]. IK seed=%zu/%d, solve_time=%.2f ms, target_points=%zu, position_only=%s.",
     msg->position.x,
     msg->position.y,
@@ -292,8 +298,8 @@ bool GazeboPoseEffortControllerNode::buildReferenceTrajectory(
 {
   if (!robot_model_->isConfigurationValid(start))
   {
-    RCLCPP_WARN(
-      get_logger(),
+    ROBOT_UTILS_LOG_WARN_TAG(
+      kLogTag,
       "Start configuration from joint_states is slightly outside URDF limits. Clamping it before trajectory generation.");
   }
 
@@ -306,8 +312,8 @@ bool GazeboPoseEffortControllerNode::buildReferenceTrajectory(
   if (!trajectory_planner_->planWaypoints(
         waypoints, segment_duration_, trajectory, sample_period_))
   {
-    RCLCPP_ERROR(
-      get_logger(),
+    ROBOT_UTILS_LOG_ERROR_TAG(
+      kLogTag,
       "Trajectory planner rejected the IK result. start_size=%ld goal_size=%ld dof=%zu "
       "start_valid=%s goal_valid=%s segment_duration=%.4f sample_period=%.4f",
       static_cast<long>(clamped_start.size()),
@@ -364,8 +370,8 @@ bool GazeboPoseEffortControllerNode::solveTargetConfiguration(
 
   for (std::size_t idx = 0; idx < seeds.size(); ++idx)
   {
-    RCLCPP_DEBUG(
-      get_logger(),
+    ROBOT_UTILS_LOG_DEBUG_TAG(
+      kLogTag,
       "Trying IK seed #%zu/%zu for target [%.4f, %.4f, %.4f]. position_only=%s",
       idx + 1,
       seeds.size(),
@@ -400,8 +406,8 @@ bool GazeboPoseEffortControllerNode::solveTargetConfiguration(
       return true;
     }
 
-    RCLCPP_DEBUG(
-      get_logger(),
+    ROBOT_UTILS_LOG_DEBUG_TAG(
+      kLogTag,
       "IK seed #%zu failed after %.2f ms.",
       idx + 1,
       elapsed_ms);
@@ -509,9 +515,8 @@ void GazeboPoseEffortControllerNode::publishDebugEndEffectorPose()
 
   if (!robot_model_->forwardKinematics(current_configuration_, debug_pose_message.pose))
   {
-    RCLCPP_WARN_THROTTLE(
-      get_logger(),
-      *get_clock(),
+    ROBOT_UTILS_LOG_WARN_THROTTLE_MS_TAG(
+      kLogTag,
       2000,
       "Failed to publish debug ee pose because forward kinematics on current joint state failed.");
     return;
