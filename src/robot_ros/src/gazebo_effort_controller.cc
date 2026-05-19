@@ -149,7 +149,7 @@ void GazeboEffortControllerNode::initializeController()
   //
   // 当前默认优先启用固定截止频率低通滤波，
   // 因为它对“零点附近速度噪声较大”的场景更直接、更容易调试。
-  // One Euro Filter 的实现仍然完整保留在 `robot_core/filters.*` 中，
+  // One Euro Filter 的实现仍然完整保留在 `robot_core/filters/filters.*` 中，
   // 后续若要对比“更低滞后”的自适应滤波效果，只需把类型改回 `one_euro`。
   joint_velocity_filters_.clear();
   if (enable_velocity_filter_)

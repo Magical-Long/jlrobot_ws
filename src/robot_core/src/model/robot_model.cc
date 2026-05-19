@@ -1,4 +1,4 @@
-#include "robot_core/robot_model.hpp"
+#include "robot_core/model/robot_model.hpp"
 
 /**
  * @file robot_model.cc

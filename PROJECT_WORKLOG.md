@@ -157,7 +157,7 @@ Gazebo effort 控制链路调试、重力补偿接入、速度滤波实验与可
 2026-05-18
 
 ## 今日主题
-补全主 URDF 动力学参数，并验证 inverse dynamics 控制效果
+补全主 URDF 动力学参数、统一日志接口，并梳理后续力控制方向
 
 ## 今日完成
 
@@ -180,6 +180,71 @@ Gazebo effort 控制链路调试、重力补偿接入、速度滤波实验与可
 - 因为这两套 launch 默认都读取 `robot.urdf`，所以现在 Pinocchio 终于能基于完整动力学模型进行 `rnea(...)` 逆动力学求解。
 - 这一步没有改 Gazebo 模型结构，只是修正了控制器内部动力学模型不完整的问题。
 
+### 3. 在 `robot_utils` 中建立通用增强日志模块
+- 新建了底层通用日志器文件：
+  - `robot_utils/include/robot_utils/logging.hpp`
+  - `robot_utils/src/logging.cc`
+- 日志器当前支持：
+  - 日志等级：`Debug / Info / Warn / Error / Fatal`
+  - 文件名、函数名、行号自动注入
+  - 时间戳
+  - 线程 ID
+  - ANSI 颜色输出
+  - 节流日志
+- 通过宏提供统一调用方式，例如：
+  - `ROBOT_UTILS_LOG_INFO_TAG(...)`
+  - `ROBOT_UTILS_LOG_WARN_THROTTLE_MS_TAG(...)`
+
+### 4. 为日志器加入外部配置能力
+- 在 `robot_utils/config/` 中新增日志配置文件：
+  - `robot_utils/config/logging.conf`
+- 在 `Logger` 中补充了：
+  - `loadConfigFromFile(...)`
+  - `parseLogLevel(...)`
+  - `parseBool(...)`
+- 当前可以通过配置文件控制：
+  - `min_level`
+  - `enable_color`
+  - `show_timestamp`
+  - `show_thread_id`
+  - `show_file_line`
+  - `show_function`
+  - `flush_every_line`
+- 明确了一个重要点：
+  - 如果没有显式调用 `loadConfigFromFile()`，当前日志系统仍使用 `LogConfig` 的默认值
+  - 默认 `min_level = Info`，因此 `Debug` 日志默认不会输出
+
+### 5. 将 `robot_ros` 的日志打印迁移到 `robot_utils`
+- 修改 `robot_ros` 构建依赖，使其依赖 `robot_utils`
+- 将以下节点中的 `RCLCPP_*` 日志迁移为统一日志宏：
+  - `gazebo_effort_controller`
+  - `gazebo_pose_effort_controller`
+  - `gazebo_pose_controller`
+  - `joint_state_demo`
+- 保持了原有控制逻辑和流程判断不变，只替换了打印接口
+- 给不同节点补充了模块标签，例如：
+  - `EFFORT`
+  - `POSE_EFFORT`
+  - `POSE_TRAJ`
+  - `JOINT_DEMO`
+
+### 6. 优化 `gazebo_pose_effort_controller` 的日志行为
+- 对重复 `/target_pose` 输入加入“重复目标抑制”，避免反复重建相同轨迹
+- 将原先一条目标触发的多条 IK 日志收敛为一条成功摘要
+- 保留失败日志和调试级 IK 细节日志，但默认不刷屏
+- 补充了配置参数：
+  - `repeated_target_position_tolerance`
+  - `repeated_target_orientation_tolerance`
+
+### 7. 梳理了 `robot_ros` 中各控制节点的职责
+- 重新明确了两条不同控制链：
+  - `gazebo_pose_controller`
+    - 直接将位姿目标转成 `JointTrajectory`，发给 Gazebo 轨迹控制器
+  - `gazebo_pose_effort_controller + gazebo_effort_controller`
+    - 上层生成关节目标
+    - 下层自行计算力矩命令
+- 统一了相关命名和文案，强调 `pose_effort` 这条链是“上层位姿目标 -> effort 控制关节目标”的桥接结构
+
 ## 今日收获
 
 ### 1. 纯 PD 与逆动力学建模的效果差异非常明显
@@ -198,9 +263,40 @@ Gazebo effort 控制链路调试、重力补偿接入、速度滤波实验与可
 - 更核心的问题是主 `robot.urdf` 缺少活动连杆的惯性参数，导致 Pinocchio 无法正确计算动力学项。
 - 补齐动力学参数后，`rnea(...)` 的效果才真正体现出来。
 
+### 3. 更清楚地区分了“底层通用日志”和“ROS2 节点日志”
+- `robot_core` 中很多类不是 ROS2 节点类，没有 `get_logger()` 这样的节点上下文
+- 因此底层通用日志器不应直接建立在 `RCLCPP_*` 上
+- `robot_utils` 更适合作为“日志内核 / 通用工具层”
+- `robot_ros` 这类节点层包则适合在上层使用统一宏，把打印行为接到同一套底层日志器
+
+### 4. 理解了节流日志和最小日志等级的意义
+- 节流日志本质是：
+  - 对同一个日志调用点按时间窗口限流
+  - 避免高频循环条件成立时刷屏
+- 最小日志等级本质是：
+  - 通过 `min_level` 过滤低等级日志
+  - 平时隐藏 `Debug`
+  - 调试时再打开 `Debug`
+
+### 5. 对后续力控制路线更明确了
+- 当前项目已经把：
+  - 位姿控制
+  - 姿态控制
+  - effort 输出
+  - inverse dynamics
+  跑顺了
+- 现在可以进入力控制篇章，但更合适的第一步不是纯力控制，而是：
+  - 笛卡尔空间阻抗控制
+- 同时进一步理清了：
+  - 运动控制和力控制关注的主目标不同
+  - 同一方向上通常不能同时刚性地独立指定位置和力
+  - 接触约束、多目标和限幅问题后续很自然会和 QP 求解联系起来
+
 ## 当前遗留问题
-- 当前 inverse dynamics 已经显著改善了到点性能和稳定性。
-- 后续还可以继续观察：
+- 当前 inverse dynamics 已经显著改善了到点性能和稳定性，后续还可以继续观察：
   - 不同轨迹速度下的稳定性
   - 是否还需要额外积分项
   - 是否需要把当前有效参数单独固化留档
+- `robot_utils` 已经具备日志配置文件加载能力，但还没有自动在各 `main.cc` 启动阶段统一调用 `loadConfigFromFile()`。
+- 目前 `robot_ros` 虽已切换到统一日志接口，但 `robot_core` 还没有逐步迁移到同一套日志器。
+- 力控制部分还处在理论梳理阶段，下一步更可能先从笛卡尔空间阻抗控制入手。

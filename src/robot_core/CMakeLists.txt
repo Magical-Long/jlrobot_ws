@@ -39,14 +39,14 @@ find_package(trajectory_msgs REQUIRED)
 # - 轨迹插值
 # - 实验组织逻辑
 add_library(robot_core SHARED
-  src/filters.cc
-  src/joint_space_pd_controller.cc
-  src/experiment_examples.cc
-  src/robot_model.cc
-  src/ik_solver.cc
-  src/moveit_obstacle_avoidance_planner.cc
-  src/obstacle_avoidance_planner.cc
-  src/trajectory_planner.cc
+  src/filters/filters.cc
+  src/control/motion/joint_space/joint_space_pd_controller.cc
+  src/examples/experiment_examples.cc
+  src/model/robot_model.cc
+  src/planning/ik/ik_solver.cc
+  src/planning/avoidance/moveit_obstacle_avoidance_planner.cc
+  src/planning/avoidance/obstacle_avoidance_planner.cc
+  src/planning/trajectory/trajectory_planner.cc
 )
 
 target_include_directories(robot_core PUBLIC
@@ -73,7 +73,7 @@ ament_target_dependencies(robot_core
 # 这个 demo 节点把 YAML / launch 参数和核心算法库串起来，
 # 便于直接做实验复现与日志对照。
 add_executable(experiment_examples_demo_node
-  src/experiment_examples_demo_node.cc
+  src/apps/experiment_examples_demo_node.cc
 )
 
 target_link_libraries(experiment_examples_demo_node

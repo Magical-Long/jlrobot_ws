@@ -1,4 +1,4 @@
-#include "robot_core/moveit_obstacle_avoidance_planner.hpp"
+#include "robot_core/planning/avoidance/moveit_obstacle_avoidance_planner.hpp"
 
 /**
  * @file moveit_obstacle_avoidance_planner.cc

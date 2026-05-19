@@ -9,9 +9,9 @@
 
 #include <Eigen/Core>
 
-#include "robot_core/control_reference.hpp"
-#include "robot_core/control_state.hpp"
-#include "robot_core/robot_model.hpp"
+#include "robot_core/control/common/control_reference.hpp"
+#include "robot_core/control/common/control_state.hpp"
+#include "robot_core/model/robot_model.hpp"
 
 namespace robot_core
 {

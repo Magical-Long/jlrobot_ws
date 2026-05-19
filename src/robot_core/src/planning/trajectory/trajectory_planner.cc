@@ -1,4 +1,4 @@
-#include "robot_core/trajectory_planner.hpp"
+#include "robot_core/planning/trajectory/trajectory_planner.hpp"
 
 /**
  * @file trajectory_planner.cc

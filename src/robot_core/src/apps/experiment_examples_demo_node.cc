@@ -13,7 +13,7 @@
 #include "ament_index_cpp/get_package_share_directory.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "robot_core/experiment_examples.hpp"
+#include "robot_core/examples/experiment_examples.hpp"
 
 /**
  * @file experiment_examples_demo_node.cc

@@ -17,7 +17,7 @@
 
 ## 笔记 1：势场法避障实现的局限与改进方向
 
-本节结合 `src/robot_core/src/obstacle_avoidance_planner.cc` 的当前实现，说明这版机械臂势场法避障规划器的主要缺点、容易出问题的场景，以及后续可以怎样改进。
+本节结合 `src/robot_core/src/planning/avoidance/obstacle_avoidance_planner.cc` 的当前实现，说明这版机械臂势场法避障规划器的主要缺点、容易出问题的场景，以及后续可以怎样改进。
 
 目标不是否定当前实现，而是帮助后续迭代时更清楚地知道：
 

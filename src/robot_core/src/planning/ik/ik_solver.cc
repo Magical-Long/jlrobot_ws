@@ -1,4 +1,4 @@
-#include "robot_core/ik_solver.hpp"
+#include "robot_core/planning/ik/ik_solver.hpp"
 
 /**
  * @file ik_solver.cc

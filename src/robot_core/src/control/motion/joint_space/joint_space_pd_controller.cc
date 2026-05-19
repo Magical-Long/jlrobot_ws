@@ -1,4 +1,4 @@
-#include "robot_core/joint_space_pd_controller.hpp"
+#include "robot_core/control/motion/joint_space/joint_space_pd_controller.hpp"
 
 /**
  * @file joint_space_pd_controller.cc

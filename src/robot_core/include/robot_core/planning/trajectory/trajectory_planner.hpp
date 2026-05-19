@@ -14,7 +14,7 @@
 #include <Eigen/Core>
 
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "robot_core/robot_model.hpp"
+#include "robot_core/model/robot_model.hpp"
 
 namespace robot_core
 {

@@ -13,9 +13,9 @@
 
 #include "geometry_msgs/msg/pose.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robot_core/ik_solver.hpp"
-#include "robot_core/robot_model.hpp"
-#include "robot_core/trajectory_planner.hpp"
+#include "robot_core/model/robot_model.hpp"
+#include "robot_core/planning/ik/ik_solver.hpp"
+#include "robot_core/planning/trajectory/trajectory_planner.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
 

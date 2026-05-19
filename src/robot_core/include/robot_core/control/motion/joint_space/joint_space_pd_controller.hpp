@@ -9,7 +9,7 @@
 
 #include <Eigen/Core>
 
-#include "robot_core/torque_controller_base.hpp"
+#include "robot_core/control/common/torque_controller_base.hpp"
 
 namespace robot_core
 {

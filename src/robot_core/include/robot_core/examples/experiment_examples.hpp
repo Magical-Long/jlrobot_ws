@@ -21,10 +21,10 @@
 
 #include "geometry_msgs/msg/pose.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robot_core/ik_solver.hpp"
-#include "robot_core/moveit_obstacle_avoidance_planner.hpp"
-#include "robot_core/obstacle_avoidance_planner.hpp"
-#include "robot_core/trajectory_planner.hpp"
+#include "robot_core/planning/avoidance/moveit_obstacle_avoidance_planner.hpp"
+#include "robot_core/planning/avoidance/obstacle_avoidance_planner.hpp"
+#include "robot_core/planning/ik/ik_solver.hpp"
+#include "robot_core/planning/trajectory/trajectory_planner.hpp"
 
 namespace robot_core
 {

@@ -134,6 +134,13 @@ install(
   DESTINATION share/${PROJECT_NAME}/config
 )
 
+install(
+  PROGRAMS
+    scripts/keyboard_command_sender.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME keyboard_command_sender
+)
+
 # 清理旧安装布局遗留在 `share/${PROJECT_NAME}` 根目录下的 launch / yaml 软链接，
 # 避免 `ros2 launch` 在新旧两套路径里同时发现同名文件。
 install(CODE

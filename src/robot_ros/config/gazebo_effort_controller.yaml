@@ -62,7 +62,7 @@ joint_effort_controller:
     #
     # 当前默认推荐 `low_pass`，因为它对“零点附近速度噪声很大”的场景更直接，
     # 调参时也比 One Euro 更容易理解。
-    # One Euro Filter 的实现仍然保留在 `robot_core/filters.*` 中，后续可随时切回做对照实验。
+    # One Euro Filter 的实现仍然保留在 `robot_core/filters/filters.*` 中，后续可随时切回做对照实验。
     velocity_filter_type: one_euro
 
     # 一阶低通滤波截止频率，单位 Hz。

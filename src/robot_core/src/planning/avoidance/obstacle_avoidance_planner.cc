@@ -1,4 +1,4 @@
-#include "robot_core/obstacle_avoidance_planner.hpp"
+#include "robot_core/planning/avoidance/obstacle_avoidance_planner.hpp"
 
 /**
  * @file obstacle_avoidance_planner.cc

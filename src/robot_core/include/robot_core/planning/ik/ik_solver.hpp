@@ -15,7 +15,7 @@
 
 #include "geometry_msgs/msg/pose.hpp"
 #include "pinocchio/spatial/se3.hpp"
-#include "robot_core/robot_model.hpp"
+#include "robot_core/model/robot_model.hpp"
 
 namespace robot_core
 {

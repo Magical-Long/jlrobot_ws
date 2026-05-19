@@ -1,4 +1,4 @@
-#include "robot_core/experiment_examples.hpp"
+#include "robot_core/examples/experiment_examples.hpp"
 
 /**
  * @file experiment_examples.cc

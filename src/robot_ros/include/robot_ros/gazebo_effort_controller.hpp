@@ -12,11 +12,11 @@
 #include <Eigen/Core>
 
 #include "rclcpp/rclcpp.hpp"
-#include "robot_core/control_reference.hpp"
-#include "robot_core/control_state.hpp"
-#include "robot_core/filters.hpp"
-#include "robot_core/joint_space_pd_controller.hpp"
-#include "robot_core/robot_model.hpp"
+#include "robot_core/control/common/control_reference.hpp"
+#include "robot_core/control/common/control_state.hpp"
+#include "robot_core/control/motion/joint_space/joint_space_pd_controller.hpp"
+#include "robot_core/filters/filters.hpp"
+#include "robot_core/model/robot_model.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
