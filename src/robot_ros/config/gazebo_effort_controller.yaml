@@ -47,7 +47,7 @@ joint_effort_controller:
     # - 原始关节速度 `/debug/raw_joint_velocity`
     # - 滤波后关节速度 `/debug/filtered_joint_velocity`
     # 便于在 PlotJuggler 中直接叠图比较滤波前后差异。
-    enable_velocity_filter_debug_topics: true
+    enable_velocity_filter_debug_topics: false
 
     # 原始关节速度调试话题名。
     raw_velocity_debug_topic: /debug/raw_joint_velocity

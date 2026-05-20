@@ -260,6 +260,9 @@
     <limit effort="300" lower="-3.0543261909900763" upper="3.0543261909900763" velocity="10"/>
     <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-3.01941960595019" soft_upper_limit="3.01941960595019"/>
     <dynamics damping="0.5"/>
+    <physics>
+      <provide_feedback>true</provide_feedback>
+    </physics>
   </joint>
   <link name="iiwa_link_7">
     <inertial>
@@ -293,6 +296,23 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <!--
+    `ee_link` 是 Gazebo 测力专用虚拟末端。
+    现有 IK / FK / 规划继续使用 `iiwa_link_ee`；
+    这个新 link 只服务于 FT 传感器链路，避免影响其它算法模块。
+  -->
+  <joint name="ee_ft_joint" type="fixed">
+    <parent link="iiwa_link_7"/>
+    <child link="ee_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0.145"/>
+  </joint>
+  <link name="ee_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
     </inertial>
   </link>
 
@@ -343,6 +363,51 @@
       <robot_param_node>__ROBOT_PARAM_NODE__</robot_param_node>
       <parameters>__CONTROLLERS_YAML_PATH__</parameters>
     </plugin>
+  </gazebo>
+
+  <!--
+    末端六维力/力矩传感器：
+    1. 插件挂在专用固定关节 `ee_ft_joint` 上；
+    2. 外力可直接施加到 `ee_link`，再通过该 joint 把 wrench 传回机械臂；
+    3. 这样 FT 测量链与算法使用的 `iiwa_link_ee` 解耦，结构更清晰。
+  -->
+  <gazebo>
+    <plugin
+      name="iiwa_ee_force_torque_sensor_plugin"
+      filename="libgazebo_ros_ft_sensor.so">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>wrench:=ee_wrench</remapping>
+      </ros>
+      <update_rate>250.0</update_rate>
+      <joint_name>ee_ft_joint</joint_name>
+      <gaussian_noise>0.0</gaussian_noise>
+    </plugin>
+  </gazebo>
+  <gazebo>
+    <!--
+      这个力施加插件专门用于导纳控制前的测力链验证。
+      它订阅一个 ROS Wrench 话题，并把收到的 wrench 持续施加到 `ee_link` 上。
+      这样我们就不再依赖 Gazebo GUI 的 Apply Force/Torque，而是用可重复的 ROS 输入做测试。
+    -->
+    <plugin
+      name="iiwa_ee_force_applier_plugin"
+      filename="libgazebo_ros_force.so">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>gazebo_ros_force:=ee_force_command</remapping>
+      </ros>
+      <link_name>ee_link</link_name>
+      <force_frame>link</force_frame>
+    </plugin>
+  </gazebo>
+  <gazebo reference="ee_ft_joint">
+    <!--
+      固定关节默认可能在 Gazebo 中被合并优化掉。
+      这里显式要求保留该 joint，并启用 feedback，保证 FT 插件能真正读到它。
+    -->
+    <preserveFixedJoint>true</preserveFixedJoint>
+    <provideFeedback>true</provideFeedback>
   </gazebo>
   <!-- Link0 -->
   <gazebo reference="iiwa_link_0">

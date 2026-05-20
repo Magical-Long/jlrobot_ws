@@ -17,6 +17,7 @@ endif()
 # 这个包主要充当 `robot_core` 和 ROS 可视化链路之间的桥接层。
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(robot_core REQUIRED)
@@ -118,6 +119,30 @@ ament_target_dependencies(gazebo_pose_effort_controller
   sensor_msgs
 )
 
+# `gazebo_admittance_controller` 节点负责：
+# - 订阅原始目标位姿和 FT 传感器 wrench
+# - 用最小三维导纳外环把外力转换成位姿偏移
+# - 发布修正后的目标位姿给现有 pose-to-effort 内环
+add_executable(gazebo_admittance_controller
+  src/gazebo_admittance_controller.cc
+  src/gazebo_admittance_controller_main.cc
+)
+
+target_include_directories(gazebo_admittance_controller PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(gazebo_admittance_controller
+  Eigen3::Eigen
+)
+
+ament_target_dependencies(gazebo_admittance_controller
+  geometry_msgs
+  rclcpp
+  robot_utils
+)
+
 # 安装头文件与运行时资源，供其他包复用或直接启动。
 install(
   DIRECTORY include/
@@ -139,6 +164,13 @@ install(
     scripts/keyboard_command_sender.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME keyboard_command_sender
+)
+
+install(
+  PROGRAMS
+    scripts/ee_force_tester.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME ee_force_tester
 )
 
 # 清理旧安装布局遗留在 `share/${PROJECT_NAME}` 根目录下的 launch / yaml 软链接，
@@ -164,6 +196,7 @@ install(
     gazebo_pose_controller
     gazebo_effort_controller
     gazebo_pose_effort_controller
+    gazebo_admittance_controller
   DESTINATION lib/${PROJECT_NAME}
 )
 

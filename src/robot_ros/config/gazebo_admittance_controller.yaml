@@ -1,0 +1,25 @@
+gazebo_admittance_controller:
+  ros__parameters:
+    input_target_pose_topic: /target_pose
+    output_target_pose_topic: /admittance_target_pose
+    wrench_topic: /ee_wrench
+
+    # 外环频率不必高过内环，但应足够快，保证受力时位姿偏移响应自然。
+    control_rate_hz: 200.0
+    enable_admittance: true
+
+    # 第一版只做三维平移导纳：
+    # M * x_ddot + D * x_dot + K * x = F_ext
+    admittance_mass: [50.0, 50.0, 50.0]
+    admittance_damping: [40.0, 40.0, 40.0]
+    admittance_stiffness: [700.0, 700.0, 700.0]
+
+    # 小于这个阈值的力统一视为 0，避免原始噪声驱动外环漂移。
+    force_deadband: [0.5, 0.5, 0.5]
+
+    # 相对原始目标位姿的最大偏移，避免参数太激进时目标跑太远。
+    max_translation_offset: [0.10, 0.10, 0.10]
+
+    # 启动阶段先用静止样本自动标定一份 wrench 零偏。
+    enable_wrench_bias_calibration: true
+    wrench_bias_sample_count: 200
